@@ -4,7 +4,12 @@ import {
   StreamViewType,
   TableV2,
 } from "aws-cdk-lib/aws-dynamodb";
-import { Connection, Authorization } from "aws-cdk-lib/aws-events";
+import {
+  Connection,
+  Authorization,
+  ApiDestination,
+  HttpMethod,
+} from "aws-cdk-lib/aws-events";
 import { Construct } from "constructs";
 import { Secret } from "aws-cdk-lib/aws-secretsmanager";
 
@@ -41,14 +46,26 @@ export class MyStack extends Stack {
      * EVENTBRIDGE
      */
 
-    new Connection(this, "WeatherStatsConnection", {
-      connectionName: "weather-stats-connection",
+    const momentoConnection = new Connection(this, "MomentoConnection", {
+      connectionName: "momento-connection",
       authorization: Authorization.apiKey(
         "Momento API Key",
         SecretValue.secretsManager(momentoApiKeySecret.secretName),
       ),
     });
 
-    // ... rest of the code ...
+    new ApiDestination(this, "MomentoCachePutApiDestination", {
+      apiDestinationName: "momento-cache-put-api-destination",
+      connection: momentoConnection,
+      endpoint: `${momentoApiEndpoint}/cache/*`,
+      httpMethod: HttpMethod.PUT,
+    });
+
+    new ApiDestination(this, "MomentoTopicsPostApiDestination", {
+      apiDestinationName: "momento-topics-post-api-destination",
+      connection: momentoConnection,
+      endpoint: `${momentoApiEndpoint}/topics/*/*`,
+      httpMethod: HttpMethod.POST,
+    });
   }
 }
