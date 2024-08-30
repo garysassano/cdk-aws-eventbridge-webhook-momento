@@ -1,10 +1,4 @@
-import {
-  SecretValue,
-  RemovalPolicy,
-  Stack,
-  StackProps,
-  Duration,
-} from "aws-cdk-lib";
+import { SecretValue, RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
 import {
   AttributeType,
   StreamViewType,
