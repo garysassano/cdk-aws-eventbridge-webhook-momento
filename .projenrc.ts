@@ -1,4 +1,5 @@
 import { awscdk, javascript } from "projen";
+
 const project = new awscdk.AwsCdkTypeScriptApp({
   cdkVersion: "2.155.0",
   defaultReleaseBranch: "main",
