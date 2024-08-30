@@ -25,10 +25,10 @@
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
-    "@types/node": "^18",
+    "@types/node": "^20",
     "@typescript-eslint/eslint-plugin": "^7",
     "@typescript-eslint/parser": "^7",
-    "aws-cdk": "^2.1.0",
+    "aws-cdk": "^2.155.0",
     "esbuild": "^0.23.1",
     "eslint": "^8",
     "eslint-config-prettier": "^9.1.0",
@@ -44,10 +44,13 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
-    "aws-cdk-lib": "^2.1.0",
+    "aws-cdk-lib": "^2.155.0",
     "constructs": "^10.0.5"
   },
   "pnpm": {},
+  "engines": {
+    "node": ">= 20.17.0"
+  },
   "license": "Apache-2.0",
   "publishConfig": {
     "access": "public"
