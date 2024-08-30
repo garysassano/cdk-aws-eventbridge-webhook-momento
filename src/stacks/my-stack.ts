@@ -61,6 +61,13 @@ export class MyStack extends Stack {
       httpMethod: HttpMethod.PUT,
     });
 
+    new ApiDestination(this, "MomentoCacheDeleteApiDestination", {
+      apiDestinationName: "momento-cache-delete-api-destination",
+      connection: momentoConnection,
+      endpoint: `${momentoApiEndpoint}/cache/*`,
+      httpMethod: HttpMethod.DELETE,
+    });
+
     new ApiDestination(this, "MomentoTopicsPostApiDestination", {
       apiDestinationName: "momento-topics-post-api-destination",
       connection: momentoConnection,
