@@ -1,4 +1,10 @@
-import { SecretValue, RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
+import {
+  SecretValue,
+  RemovalPolicy,
+  Stack,
+  StackProps,
+  Duration,
+} from "aws-cdk-lib";
 import {
   AttributeType,
   StreamViewType,
@@ -12,6 +18,15 @@ import {
 } from "aws-cdk-lib/aws-events";
 import { Construct } from "constructs";
 import { Secret } from "aws-cdk-lib/aws-secretsmanager";
+import {
+  Pipe,
+  FilterPattern,
+  DynamicInput,
+  input,
+} from "aws-cdk-lib/aws-pipes-alpha";
+import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as logs from "aws-cdk-lib/aws-logs";
 
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
@@ -73,6 +88,155 @@ export class MyStack extends Stack {
       connection: momentoConnection,
       endpoint: `${momentoApiEndpoint}/topics/*/*`,
       httpMethod: HttpMethod.POST,
+    });
+
+    // Dead Letter Queue
+    const deadLetterQueue = new sqs.Queue(this, "DeadLetterQueue", {
+      queueName: "weather-stats-demo-dlq",
+      retentionPeriod: Duration.days(14),
+    });
+
+    // Log Group
+    const logGroup = new logs.LogGroup(this, "PipeLogsGroup", {
+      logGroupName: "/aws/vendedlogs/pipes/weather-stats-demo-logs",
+      retention: logs.RetentionDays.TWO_WEEKS,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
+    // IAM Role
+    const role = new iam.Role(
+      this,
+      "AmazonEventBridgePipeWeatherStatsDemoEventToMomentoCache",
+      {
+        roleName: "AmazonEventBridgePipeWeatherStatsDemoEventToMomentoCache",
+        assumedBy: new iam.ServicePrincipal("pipes.amazonaws.com"),
+      },
+    );
+
+    // Add necessary permissions to the role
+    weatherStatsTable.grantStreamRead(role);
+    deadLetterQueue.grantSendMessages(role);
+    logGroup.grantWrite(role);
+    cachePutApiDestination.grantPutEvents(role);
+    cacheDeleteApiDestination.grantPutEvents(role);
+    topicPublishApiDestination.grantPutEvents(role);
+
+    // Cache Put Pipe
+    new Pipe(this, "WeatherStatsDemoCachePutPipe", {
+      pipeName: "weather-stats-demo-cache-put-pipe",
+      source: weatherStatsTable,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 1,
+          maximumRetryAttempts: 0,
+          deadLetterConfig: {
+            queue: deadLetterQueue,
+          },
+        },
+        filterCriteria: {
+          filters: [
+            FilterPattern.fromObject({ eventName: ["INSERT", "MODIFY"] }),
+          ],
+        },
+      },
+      target: cachePutApiDestination,
+      targetParameters: {
+        inputTemplate: JSON.stringify({
+          Location: DynamicInput.fromEventPath("$.dynamodb.Keys.Location.S"),
+          MaxTemp: DynamicInput.fromEventPath("$.dynamodb.NewImage.MaxTemp.N"),
+          MinTemp: DynamicInput.fromEventPath("$.dynamodb.NewImage.MinTemp.N"),
+          ChancesOfPrecipitation: DynamicInput.fromEventPath(
+            "$.dynamodb.NewImage.ChancesOfPrecipitation.N",
+          ),
+        }),
+        httpParameters: {
+          pathParameterValues: [cacheName],
+          queryStringParameters: {
+            key: DynamicInput.fromEventPath("$.dynamodb.Keys.Location.S"),
+            ttl_seconds: DynamicInput.fromEventPath(
+              "$.dynamodb.NewImage.TTL.N",
+            ),
+          },
+        },
+      },
+      role,
+      logConfiguration: {
+        level: "INFO",
+        cloudwatchLogsLogDestination: logGroup,
+        includeExecutionData: ["ALL"],
+      },
+    });
+
+    // Topic Publish Pipe
+    new Pipe(this, "WeatherStatsDemoTopicPublishPipe", {
+      pipeName: "weather-stats-demo-topic-publish-pipe",
+      source: weatherStatsTable,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 1,
+          maximumRetryAttempts: 0,
+          deadLetterConfig: {
+            queue: deadLetterQueue,
+          },
+        },
+      },
+      target: topicPublishApiDestination,
+      targetParameters: {
+        inputTemplate: JSON.stringify({
+          EventType: DynamicInput.fromEventPath("$.eventName"),
+          Location: DynamicInput.fromEventPath("$.dynamodb.Keys.Location.S"),
+          MaxTemp: DynamicInput.fromEventPath("$.dynamodb.NewImage.MaxTemp.N"),
+          MinTemp: DynamicInput.fromEventPath("$.dynamodb.NewImage.MinTemp.N"),
+          ChancesOfPrecipitation: DynamicInput.fromEventPath(
+            "$.dynamodb.NewImage.ChancesOfPrecipitation.N",
+          ),
+        }),
+        httpParameters: {
+          pathParameterValues: [cacheName, topicName],
+        },
+      },
+      role,
+      logConfiguration: {
+        level: "INFO",
+        cloudwatchLogsLogDestination: logGroup,
+        includeExecutionData: ["ALL"],
+      },
+    });
+
+    // Cache Delete Pipe
+    new Pipe(this, "WeatherStatsDemoCacheDeletePipe", {
+      pipeName: "weather-stats-demo-cache-delete-pipe",
+      source: weatherStatsTable,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 1,
+          maximumRetryAttempts: 0,
+          deadLetterConfig: {
+            queue: deadLetterQueue,
+          },
+        },
+        filterCriteria: {
+          filters: [FilterPattern.fromObject({ eventName: ["REMOVE"] })],
+        },
+      },
+      target: cacheDeleteApiDestination,
+      targetParameters: {
+        httpParameters: {
+          pathParameterValues: [cacheName],
+          queryStringParameters: {
+            key: DynamicInput.fromEventPath("$.dynamodb.Keys.Location.S"),
+          },
+        },
+      },
+      role,
+      logConfiguration: {
+        level: "INFO",
+        cloudwatchLogsLogDestination: logGroup,
+        includeExecutionData: ["ALL"],
+      },
     });
   }
 }

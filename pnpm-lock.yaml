@@ -8,6 +8,18 @@ importers:
 
   .:
     dependencies:
+      '@aws-cdk/aws-pipes-alpha':
+        specifier: ^2.155.0-alpha.0
+        version: 2.155.0-alpha.0(aws-cdk-lib@2.155.0(constructs@10.3.0))(constructs@10.3.0)
+      '@aws-cdk/aws-pipes-enrichments-alpha':
+        specifier: ^2.155.0-alpha.0
+        version: 2.155.0-alpha.0(@aws-cdk/aws-pipes-alpha@2.155.0-alpha.0(aws-cdk-lib@2.155.0(constructs@10.3.0))(constructs@10.3.0))(aws-cdk-lib@2.155.0(constructs@10.3.0))(constructs@10.3.0)
+      '@aws-cdk/aws-pipes-sources-alpha':
+        specifier: ^2.155.0-alpha.0
+        version: 2.155.0-alpha.0(@aws-cdk/aws-pipes-alpha@2.155.0-alpha.0(aws-cdk-lib@2.155.0(constructs@10.3.0))(constructs@10.3.0))(aws-cdk-lib@2.155.0(constructs@10.3.0))(constructs@10.3.0)
+      '@aws-cdk/aws-pipes-targets-alpha':
+        specifier: ^2.155.0-alpha.0
+        version: 2.155.0-alpha.0(@aws-cdk/aws-pipes-alpha@2.155.0-alpha.0(aws-cdk-lib@2.155.0(constructs@10.3.0))(constructs@10.3.0))(aws-cdk-lib@2.155.0(constructs@10.3.0))(constructs@10.3.0)
       aws-cdk-lib:
         specifier: ^2.155.0
         version: 2.155.0(constructs@10.3.0)
@@ -84,6 +96,37 @@ packages:
 
   '@aws-cdk/asset-node-proxy-agent-v6@2.0.3':
     resolution: {integrity: sha512-twhuEG+JPOYCYPx/xy5uH2+VUsIEhPTzDY0F1KuB+ocjWWB/KEDiOVL19nHvbPCB6fhWnkykXEMJ4HHcKvjtvg==}
+
+  '@aws-cdk/aws-pipes-alpha@2.155.0-alpha.0':
+    resolution: {integrity: sha512-OEKyR+X9AD5NcaP55YvmfYHMa+EzVvnlc5M2amr4QMAhNv6VCWpfJzijBoNTOsEfXSEFQkgAUeYK9MvxZO3Fxg==}
+    engines: {node: '>= 14.15.0'}
+    peerDependencies:
+      aws-cdk-lib: ^2.155.0
+      constructs: ^10.0.0
+
+  '@aws-cdk/aws-pipes-enrichments-alpha@2.155.0-alpha.0':
+    resolution: {integrity: sha512-JIuiX4nzHgsGTLmq03GLCJDXNn1eUEn7ImaAX5i+WFRHbFpo4QRrIFnEjzpi8J4MDlxYs29uTEOQRx+nbLllAQ==}
+    engines: {node: '>= 14.15.0'}
+    peerDependencies:
+      '@aws-cdk/aws-pipes-alpha': 2.155.0-alpha.0
+      aws-cdk-lib: ^2.155.0
+      constructs: ^10.0.0
+
+  '@aws-cdk/aws-pipes-sources-alpha@2.155.0-alpha.0':
+    resolution: {integrity: sha512-fnxryUtiVdEMwlp+M2lwD4891kJObUsfywFnOha6ZmOPyZ+JCZVOYYkXkRgzGunW3vekkizIh1I/DOZ7qjbnSg==}
+    engines: {node: '>= 14.15.0'}
+    peerDependencies:
+      '@aws-cdk/aws-pipes-alpha': 2.155.0-alpha.0
+      aws-cdk-lib: ^2.155.0
+      constructs: ^10.0.0
+
+  '@aws-cdk/aws-pipes-targets-alpha@2.155.0-alpha.0':
+    resolution: {integrity: sha512-HwODINqEZrrJeYkmZoqclKusTxSXt4NHO9nNxim3SA0JY+KURZPl+McnJLlDWEmdH34/xPinLs8O5/oL+PFvYA==}
+    engines: {node: '>= 14.15.0'}
+    peerDependencies:
+      '@aws-cdk/aws-pipes-alpha': 2.155.0-alpha.0
+      aws-cdk-lib: ^2.155.0
+      constructs: ^10.0.0
 
   '@aws-cdk/cloud-assembly-schema@36.0.21':
     resolution: {integrity: sha512-MuuzRxWfrrIw2D2s5p5axwDiH7BrKsDBCKS8OCmVGe8yKAtF2Y9cNo1Z0q4wySMfbaa6hgqTXnigO6YTzLru1w==}
@@ -2311,6 +2354,29 @@ snapshots:
   '@aws-cdk/asset-kubectl-v20@2.1.2': {}
 
   '@aws-cdk/asset-node-proxy-agent-v6@2.0.3': {}
+
+  '@aws-cdk/aws-pipes-alpha@2.155.0-alpha.0(aws-cdk-lib@2.155.0(constructs@10.3.0))(constructs@10.3.0)':
+    dependencies:
+      aws-cdk-lib: 2.155.0(constructs@10.3.0)
+      constructs: 10.3.0
+
+  '@aws-cdk/aws-pipes-enrichments-alpha@2.155.0-alpha.0(@aws-cdk/aws-pipes-alpha@2.155.0-alpha.0(aws-cdk-lib@2.155.0(constructs@10.3.0))(constructs@10.3.0))(aws-cdk-lib@2.155.0(constructs@10.3.0))(constructs@10.3.0)':
+    dependencies:
+      '@aws-cdk/aws-pipes-alpha': 2.155.0-alpha.0(aws-cdk-lib@2.155.0(constructs@10.3.0))(constructs@10.3.0)
+      aws-cdk-lib: 2.155.0(constructs@10.3.0)
+      constructs: 10.3.0
+
+  '@aws-cdk/aws-pipes-sources-alpha@2.155.0-alpha.0(@aws-cdk/aws-pipes-alpha@2.155.0-alpha.0(aws-cdk-lib@2.155.0(constructs@10.3.0))(constructs@10.3.0))(aws-cdk-lib@2.155.0(constructs@10.3.0))(constructs@10.3.0)':
+    dependencies:
+      '@aws-cdk/aws-pipes-alpha': 2.155.0-alpha.0(aws-cdk-lib@2.155.0(constructs@10.3.0))(constructs@10.3.0)
+      aws-cdk-lib: 2.155.0(constructs@10.3.0)
+      constructs: 10.3.0
+
+  '@aws-cdk/aws-pipes-targets-alpha@2.155.0-alpha.0(@aws-cdk/aws-pipes-alpha@2.155.0-alpha.0(aws-cdk-lib@2.155.0(constructs@10.3.0))(constructs@10.3.0))(aws-cdk-lib@2.155.0(constructs@10.3.0))(constructs@10.3.0)':
+    dependencies:
+      '@aws-cdk/aws-pipes-alpha': 2.155.0-alpha.0(aws-cdk-lib@2.155.0(constructs@10.3.0))(constructs@10.3.0)
+      aws-cdk-lib: 2.155.0(constructs@10.3.0)
+      constructs: 10.3.0
 
   '@aws-cdk/cloud-assembly-schema@36.0.21': {}
 

@@ -11,6 +11,13 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   pnpmVersion: "9.9.0",
   prettier: true,
   projenrcTs: true,
+
+  deps: [
+    "@aws-cdk/aws-pipes-alpha",
+    "@aws-cdk/aws-pipes-sources-alpha",
+    "@aws-cdk/aws-pipes-targets-alpha",
+    "@aws-cdk/aws-pipes-enrichments-alpha",
+  ],
 });
 
 project.synth();
