@@ -25,6 +25,9 @@ import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
 import * as cdk from "aws-cdk-lib";
 
+const cacheName: string = "momento-eventbridge-cache";
+const topicName: string = "momento-eventbridge-topic";
+
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
     super(scope, id, props);
@@ -270,7 +273,7 @@ export class MyStack extends Stack {
       },
     );
 
-    // Add target parameters to the pipes
+    // Update the target parameters
     cachePutCfnPipe.targetParameters = {
       inputTemplate:
         '{\n  "Location": <$.dynamodb.Keys.Location.S>, \n  "MaxTemp": <$.dynamodb.NewImage.MaxTemp.N>,\n  "MinTemp": <$.dynamodb.NewImage.MinTemp.N>, \n  "ChancesOfPrecipitation": <$.dynamodb.NewImage.ChancesOfPrecipitation.N>\n}',
