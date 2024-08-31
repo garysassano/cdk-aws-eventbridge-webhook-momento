@@ -4,7 +4,6 @@ import {
   Stack,
   StackProps,
   Duration,
-  Fn,
 } from "aws-cdk-lib";
 import {
   AttributeType,
