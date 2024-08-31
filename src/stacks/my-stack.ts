@@ -106,14 +106,14 @@ export class MyStack extends Stack {
      * TO MODIFY FROM HERE
      */
 
-    // Define the dead letter queue for inspecting failed events to event bridge
+    // Dead Letter Queue
     const deadLetterQueue = new Queue(this, "DeadLetterQueue", {
       queueName: "weather-stats-demo-dlq",
       retentionPeriod: Duration.days(14),
     });
 
-    // Define the role for the event bridge
-    const role = new Role(
+    // EventBridge Role
+    const eventBridgeRole = new Role(
       this,
       "AmazonEventBridgePipeWeatherStatsDemoEventToMomentoCache",
       {
@@ -122,8 +122,7 @@ export class MyStack extends Stack {
       },
     );
 
-    // Add permissions to the role
-    role.addToPolicy(
+    eventBridgeRole.addToPolicy(
       new PolicyStatement({
         actions: ["events:InvokeApiDestination"],
         resources: [
@@ -135,7 +134,7 @@ export class MyStack extends Stack {
       }),
     );
 
-    role.addToPolicy(
+    eventBridgeRole.addToPolicy(
       new PolicyStatement({
         actions: [
           "dynamodb:DescribeStream",
@@ -148,7 +147,7 @@ export class MyStack extends Stack {
       }),
     );
 
-    role.addToPolicy(
+    eventBridgeRole.addToPolicy(
       new PolicyStatement({
         actions: [
           "sqs:SendMessage",
@@ -162,14 +161,14 @@ export class MyStack extends Stack {
       }),
     );
 
-    // Define the log group for the access logs
+    // Log Group
     const logGroup = new LogGroup(this, "AccessLogs", {
       retention: RetentionDays.THREE_MONTHS,
       logGroupName: cdk.Fn.sub(`weather-stats-demo-logs-\${AWS::Region}`),
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
-    // Define the pipe for the cache put operation
+    // EventBridge Pipes
     const cachePutCfnPipe = new CfnPipe(
       this,
       "weather-stats-demo-cache-put-pipe",
@@ -195,7 +194,7 @@ export class MyStack extends Stack {
           },
         },
         target: momentoCachePutApiDestination.apiDestinationArn!,
-        roleArn: role.roleArn,
+        roleArn: eventBridgeRole.roleArn,
         logConfiguration: {
           cloudwatchLogsLogDestination: {
             logGroupArn: logGroup.logGroupArn,
@@ -206,7 +205,6 @@ export class MyStack extends Stack {
       },
     );
 
-    // Define the pipe for the topic publish operation
     const topicPublishCfnPipe = new CfnPipe(
       this,
       "weather-stats-demo-topic-publish-pipe",
@@ -225,7 +223,7 @@ export class MyStack extends Stack {
           },
         },
         target: momentoTopicsPostApiDestination.apiDestinationArn!,
-        roleArn: role.roleArn,
+        roleArn: eventBridgeRole.roleArn,
         logConfiguration: {
           cloudwatchLogsLogDestination: {
             logGroupArn: logGroup.logGroupArn,
@@ -236,7 +234,6 @@ export class MyStack extends Stack {
       },
     );
 
-    // Define the pipe for the cache delete operation
     const cacheDeleteCfnPipe = new CfnPipe(
       this,
       "weather-stats-demo-cache-delete-pipe",
@@ -262,7 +259,7 @@ export class MyStack extends Stack {
           },
         },
         target: momentoCacheDeleteApiDestination.apiDestinationArn!,
-        roleArn: role.roleArn,
+        roleArn: eventBridgeRole.roleArn,
         logConfiguration: {
           cloudwatchLogsLogDestination: {
             logGroupArn: logGroup.logGroupArn,
@@ -273,7 +270,7 @@ export class MyStack extends Stack {
       },
     );
 
-    // Update the target parameters
+    // Set Target Parameters
     cachePutCfnPipe.targetParameters = {
       inputTemplate:
         '{\n  "Location": <$.dynamodb.Keys.Location.S>, \n  "MaxTemp": <$.dynamodb.NewImage.MaxTemp.N>,\n  "MinTemp": <$.dynamodb.NewImage.MinTemp.N>, \n  "ChancesOfPrecipitation": <$.dynamodb.NewImage.ChancesOfPrecipitation.N>\n}',
@@ -303,7 +300,7 @@ export class MyStack extends Stack {
       },
     };
 
-    // Add dependencies to the pipes
+    // Add Dependencies
     cachePutCfnPipe.node.addDependency(weatherStatsTable);
     cachePutCfnPipe.node.addDependency(momentoCachePutApiDestination);
     topicPublishCfnPipe.node.addDependency(weatherStatsTable);
