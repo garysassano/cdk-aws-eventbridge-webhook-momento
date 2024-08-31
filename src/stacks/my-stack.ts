@@ -21,8 +21,9 @@ import { Queue } from "aws-cdk-lib/aws-sqs";
 import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import { Secret } from "aws-cdk-lib/aws-secretsmanager";
-import { LogGroup } from "aws-cdk-lib/aws-logs";
+import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
+import * as cdk from "aws-cdk-lib";
 
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
@@ -157,6 +158,13 @@ export class MyStack extends Stack {
         effect: Effect.ALLOW,
       }),
     );
+
+    // Define the log group for the access logs
+    const logGroup = new LogGroup(this, "AccessLogs", {
+      retention: RetentionDays.THREE_MONTHS,
+      logGroupName: cdk.Fn.sub(`weather-stats-demo-logs-\${AWS::Region}`),
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
 
     // Define the pipe for the cache put operation
     const cachePutCfnPipe = new CfnPipe(
