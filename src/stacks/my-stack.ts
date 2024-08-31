@@ -168,7 +168,7 @@ export class MyStack extends Stack {
     // Log Group
     const logGroup = new LogGroup(this, "AccessLogs", {
       retention: RetentionDays.THREE_MONTHS,
-      logGroupName: Fn.sub(`weather-stats-demo-logs-\${AWS::Region}`),
+      logGroupName: `weather-stats-demo-logs-${this.region}`,
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
