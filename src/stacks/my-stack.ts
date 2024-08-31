@@ -4,6 +4,7 @@ import {
   Stack,
   StackProps,
   Duration,
+  Fn,
 } from "aws-cdk-lib";
 import {
   AttributeType,
@@ -18,12 +19,15 @@ import {
 } from "aws-cdk-lib/aws-events";
 import { CfnPipe } from "aws-cdk-lib/aws-pipes";
 import { Queue } from "aws-cdk-lib/aws-sqs";
-import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
+import {
+  Role,
+  ServicePrincipal,
+  PolicyStatement,
+  Effect,
+} from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import { Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
-import { PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
-import * as cdk from "aws-cdk-lib";
 
 const cacheName: string = "momento-eventbridge-cache";
 const topicName: string = "momento-eventbridge-topic";
@@ -164,7 +168,7 @@ export class MyStack extends Stack {
     // Log Group
     const logGroup = new LogGroup(this, "AccessLogs", {
       retention: RetentionDays.THREE_MONTHS,
-      logGroupName: cdk.Fn.sub(`weather-stats-demo-logs-\${AWS::Region}`),
+      logGroupName: Fn.sub(`weather-stats-demo-logs-\${AWS::Region}`),
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
