@@ -6,7 +6,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   depsUpgradeOptions: { workflow: false },
   eslint: true,
   minNodeVersion: "20.17.0",
-  name: "cdk-aws-momento",
+  name: "cdk-aws-webhook-momento",
   packageManager: javascript.NodePackageManager.PNPM,
   pnpmVersion: "9.9.0",
   prettier: true,

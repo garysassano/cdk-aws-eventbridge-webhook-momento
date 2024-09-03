@@ -9,6 +9,6 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, "cdk-aws-momento-dev", { env: devEnv });
+new MyStack(app, "cdk-aws-webhook-momento-dev", { env: devEnv });
 
 app.synth();
