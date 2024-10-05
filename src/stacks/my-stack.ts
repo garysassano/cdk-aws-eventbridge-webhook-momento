@@ -142,9 +142,13 @@ export class MyStack extends Stack {
       }),
     ]);
 
+    const pipeTarget = new ApiDestinationTarget(momentoCachePutApiDestination, {
+      pathParameterValues: [cacheName],
+    });
+
     new Pipe(this, "Pipe2", {
       source: pipeSource,
-      target: new ApiDestinationTarget(momentoCachePutApiDestination),
+      target: pipeTarget,
       filter: pipeSourceFilter,
     });
 
