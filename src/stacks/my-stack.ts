@@ -230,6 +230,10 @@ export class MyStack extends Stack {
       logLevel: LogLevel.INFO,
     });
 
+    //==============================================================================
+    // MOMENTO CACHE PUT PIPE
+    //==============================================================================
+
     // EventBridge Pipes
     const cachePutCfnPipe = new CfnPipe(
       this,
