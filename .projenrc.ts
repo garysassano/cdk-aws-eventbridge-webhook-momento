@@ -1,14 +1,14 @@
 import { awscdk, javascript } from "projen";
 
 const project = new awscdk.AwsCdkTypeScriptApp({
-  cdkVersion: "2.155.0",
+  cdkVersion: "2.161.0",
   defaultReleaseBranch: "main",
   depsUpgradeOptions: { workflow: false },
   eslint: true,
-  minNodeVersion: "20.17.0",
+  minNodeVersion: "20.18.0",
   name: "cdk-aws-webhook-momento",
   packageManager: javascript.NodePackageManager.PNPM,
-  pnpmVersion: "9.9.0",
+  pnpmVersion: "9.12.0",
   prettier: true,
   projenrcTs: true,
 
