@@ -3,6 +3,9 @@ import {
   Filter,
   FilterPattern,
   InputTransformation,
+  LogDestinationConfig,
+  LogLevel,
+  LogDestinationParameters,
 } from "@aws-cdk/aws-pipes-alpha";
 import {
   DynamoDBSource,
@@ -129,43 +132,6 @@ export class MyStack extends Stack {
       retentionPeriod: Duration.days(14),
     });
 
-    const momentoCachePutPipeSource = new DynamoDBSource(weatherStatsTable, {
-      startingPosition: DynamoDBStartingPosition.LATEST,
-      batchSize: 1,
-      maximumRetryAttempts: 0,
-      // deadLetterTarget: deadLetterQueue,
-    });
-
-    // new Pipe(this, "Pipe", {
-    //   source: pipeSource,
-    //   target: new SqsTarget(deadLetterQueue),
-    // });
-
-    const momentoCachePutPipeFilter = new Filter([
-      FilterPattern.fromObject({
-        eventName: ["INSERT", "MODIFY"],
-      }),
-    ]);
-
-    const momentoCachePutPipeTarget = new ApiDestinationTarget(
-      momentoCachePutApiDestination,
-      {
-        pathParameterValues: [cacheName],
-        queryStringParameters: {
-          key: "$.dynamodb.Keys.Location.S",
-          ttl_seconds: "$.dynamodb.NewImage.TTL.N",
-        },
-        inputTransformation: InputTransformation.fromObject({
-          Location: "$.dynamodb.Keys.Location.S",
-          MaxTemp: "$.dynamodb.NewImage.MaxTemp.N",
-          MinTemp: "$.dynamodb.NewImage.MinTemp.N",
-          ChancesOfPrecipitation:
-            "$.dynamodb.NewImage.ChancesOfPrecipitation.N",
-        }),
-      },
-    );
-
-    // EventBridge Role
     const eventBridgeRole = new Role(
       this,
       "AmazonEventBridgePipeWeatherStatsDemoEventToMomentoCache",
@@ -174,13 +140,6 @@ export class MyStack extends Stack {
         assumedBy: new ServicePrincipal("pipes.amazonaws.com"),
       },
     );
-
-    new Pipe(this, "Pipe2", {
-      source: momentoCachePutPipeSource,
-      filter: momentoCachePutPipeFilter,
-      target: momentoCachePutPipeTarget,
-      // role: eventBridgeRole,
-    });
 
     eventBridgeRole.addToPolicy(
       new PolicyStatement({
@@ -227,6 +186,49 @@ export class MyStack extends Stack {
       logGroupName: `weather-stats-demo-logs-${this.region}`,
       removalPolicy: RemovalPolicy.DESTROY,
     });
+
+    //==============================================================================
+    // MOMENTO CACHE PUT PIPE
+    //==============================================================================
+
+    const momentoCachePutPipeSource = new DynamoDBSource(weatherStatsTable, {
+      startingPosition: DynamoDBStartingPosition.LATEST,
+      batchSize: 1,
+      maximumRetryAttempts: 0,
+      // deadLetterTarget: deadLetterQueue,
+    });
+
+    const momentoCachePutPipeFilter = new Filter([
+      FilterPattern.fromObject({
+        eventName: ["INSERT", "MODIFY"],
+      }),
+    ]);
+
+    const momentoCachePutPipeTarget = new ApiDestinationTarget(
+      momentoCachePutApiDestination,
+      {
+        pathParameterValues: [cacheName],
+        queryStringParameters: {
+          key: "$.dynamodb.Keys.Location.S",
+          ttl_seconds: "$.dynamodb.NewImage.TTL.N",
+        },
+        inputTransformation: InputTransformation.fromObject({
+          Location: "$.dynamodb.Keys.Location.S",
+          MaxTemp: "$.dynamodb.NewImage.MaxTemp.N",
+          MinTemp: "$.dynamodb.NewImage.MinTemp.N",
+          ChancesOfPrecipitation:
+            "$.dynamodb.NewImage.ChancesOfPrecipitation.N",
+        }),
+      },
+    );
+
+    new Pipe(this, "MomentoCachePutPipe", {
+      source: momentoCachePutPipeSource,
+      filter: momentoCachePutPipeFilter,
+      target: momentoCachePutPipeTarget,
+      // role: eventBridgeRole,
+      logLevel: LogLevel.INFO,
+      logDestinations: [];
 
     // EventBridge Pipes
     const cachePutCfnPipe = new CfnPipe(
