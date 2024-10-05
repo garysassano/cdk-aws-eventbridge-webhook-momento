@@ -136,16 +136,16 @@ export class MyStack extends Stack {
     //   target: new SqsTarget(deadLetterQueue),
     // });
 
-    const sourceFilter = new Filter([
+    const pipeSourceFilter = new Filter([
       FilterPattern.fromObject({
-        eventName: ["REMOVE"],
+        eventName: ["INSERT", "MODIFY"],
       }),
     ]);
 
     new Pipe(this, "Pipe2", {
       source: pipeSource,
       target: new ApiDestinationTarget(momentoCachePutApiDestination),
-      filter: sourceFilter,
+      filter: pipeSourceFilter,
     });
 
     // EventBridge Role
