@@ -1,4 +1,4 @@
-import { Pipe } from "@aws-cdk/aws-pipes-alpha";
+import { Pipe, Filter, FilterPattern } from "@aws-cdk/aws-pipes-alpha";
 import {
   DynamoDBSource,
   DynamoDBStartingPosition,
@@ -136,9 +136,16 @@ export class MyStack extends Stack {
     //   target: new SqsTarget(deadLetterQueue),
     // });
 
+    const sourceFilter = new Filter([
+      FilterPattern.fromObject({
+        eventName: ["REMOVE"],
+      }),
+    ]);
+
     new Pipe(this, "Pipe2", {
       source: pipeSource,
       target: new ApiDestinationTarget(momentoCachePutApiDestination),
+      filter: sourceFilter,
     });
 
     // EventBridge Role
