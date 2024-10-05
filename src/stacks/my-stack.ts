@@ -7,6 +7,7 @@ import {
   LogLevel,
   // LogDestinationParameters,
   ILogDestination,
+  IncludeExecutionData,
 } from "@aws-cdk/aws-pipes-alpha";
 import {
   DynamoDBSource,
@@ -243,6 +244,7 @@ export class MyStack extends Stack {
       target: momentoCachePutPipeTarget,
       logDestinations: [logDestination],
       logLevel: LogLevel.INFO,
+      logIncludeExecutionData: [IncludeExecutionData.ALL],
     });
 
     //==============================================================================
