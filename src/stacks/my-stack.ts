@@ -1,4 +1,9 @@
-import { Pipe, Filter, FilterPattern } from "@aws-cdk/aws-pipes-alpha";
+import {
+  Pipe,
+  Filter,
+  FilterPattern,
+  InputTransformation,
+} from "@aws-cdk/aws-pipes-alpha";
 import {
   DynamoDBSource,
   DynamoDBStartingPosition,
@@ -144,6 +149,16 @@ export class MyStack extends Stack {
 
     const pipeTarget = new ApiDestinationTarget(momentoCachePutApiDestination, {
       pathParameterValues: [cacheName],
+      queryStringParameters: {
+        key: "$.dynamodb.Keys.Location.S",
+        ttl_seconds: "$.dynamodb.NewImage.TTL.N",
+      },
+      inputTransformation: InputTransformation.fromObject({
+        Location: "$.dynamodb.Keys.Location.S",
+        MaxTemp: "$.dynamodb.NewImage.MaxTemp.N",
+        MinTemp: "$.dynamodb.NewImage.MinTemp.N",
+        ChancesOfPrecipitation: "$.dynamodb.NewImage.ChancesOfPrecipitation.N",
+      }),
     });
 
     new Pipe(this, "Pipe2", {
