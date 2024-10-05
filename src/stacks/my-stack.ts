@@ -62,7 +62,10 @@ export class MyStack extends Stack {
 
     const weatherStatsTable = new TableV2(this, "WeatherStatsTable", {
       tableName: "weather-stats-table",
-      partitionKey: { name: "Location", type: AttributeType.STRING },
+      partitionKey: {
+        name: "Location",
+        type: AttributeType.STRING,
+      },
       dynamoStream: StreamViewType.NEW_AND_OLD_IMAGES,
       removalPolicy: RemovalPolicy.DESTROY,
     });
