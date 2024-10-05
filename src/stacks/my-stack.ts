@@ -3,10 +3,7 @@ import {
   DynamoDBSource,
   DynamoDBStartingPosition,
 } from "@aws-cdk/aws-pipes-sources-alpha";
-import {
-  SqsTarget,
-  ApiDestinationTarget,
-} from "@aws-cdk/aws-pipes-targets-alpha";
+import { ApiDestinationTarget } from "@aws-cdk/aws-pipes-targets-alpha";
 import {
   SecretValue,
   RemovalPolicy,
@@ -131,13 +128,13 @@ export class MyStack extends Stack {
       startingPosition: DynamoDBStartingPosition.LATEST,
       batchSize: 1,
       maximumRetryAttempts: 0,
-      deadLetterTarget: deadLetterQueue,
+      // deadLetterTarget: deadLetterQueue,
     });
 
-    new Pipe(this, "Pipe", {
-      source: pipeSource,
-      target: new SqsTarget(deadLetterQueue),
-    });
+    // new Pipe(this, "Pipe", {
+    //   source: pipeSource,
+    //   target: new SqsTarget(deadLetterQueue),
+    // });
 
     new Pipe(this, "Pipe2", {
       source: pipeSource,
