@@ -3,9 +3,9 @@ import {
   Filter,
   FilterPattern,
   InputTransformation,
-  LogDestinationConfig,
+  // LogDestinationConfig,
   LogLevel,
-  LogDestinationParameters,
+  // LogDestinationParameters,
 } from "@aws-cdk/aws-pipes-alpha";
 import {
   DynamoDBSource,
@@ -228,7 +228,7 @@ export class MyStack extends Stack {
       target: momentoCachePutPipeTarget,
       // role: eventBridgeRole,
       logLevel: LogLevel.INFO,
-      logDestinations: [];
+    });
 
     // EventBridge Pipes
     const cachePutCfnPipe = new CfnPipe(
