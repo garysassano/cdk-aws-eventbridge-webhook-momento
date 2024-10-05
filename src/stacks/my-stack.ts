@@ -1,3 +1,9 @@
+import { Pipe } from "@aws-cdk/aws-pipes-alpha";
+import {
+  DynamoDBSource,
+  DynamoDBStartingPosition,
+} from "@aws-cdk/aws-pipes-sources-alpha";
+import { ApiDestinationTarget } from "@aws-cdk/aws-pipes-targets-alpha";
 import {
   SecretValue,
   RemovalPolicy,
@@ -5,6 +11,7 @@ import {
   StackProps,
   Duration,
 } from "aws-cdk-lib";
+import { DynamoDbDataSource } from "aws-cdk-lib/aws-appsync";
 import {
   AttributeType,
   StreamViewType,
@@ -113,6 +120,15 @@ export class MyStack extends Stack {
     const deadLetterQueue = new Queue(this, "DeadLetterQueue", {
       queueName: "weather-stats-demo-dlq",
       retentionPeriod: Duration.days(14),
+    });
+
+    const pipeSource = new DynamoDBSource(weatherStatsTable, {
+      startingPosition: DynamoDBStartingPosition.LATEST,
+    });
+
+    const pipe = new Pipe(this, "Pipe", {
+      source: pipeSource,
+      target: new SomeTarget(targetQueue),
     });
 
     // EventBridge Role
