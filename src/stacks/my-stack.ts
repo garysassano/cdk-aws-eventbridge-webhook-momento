@@ -11,7 +11,6 @@ import {
   StackProps,
   Duration,
 } from "aws-cdk-lib";
-import { DynamoDbDataSource } from "aws-cdk-lib/aws-appsync";
 import {
   AttributeType,
   StreamViewType,
