@@ -4,8 +4,8 @@ import {
   DynamoDBStartingPosition,
 } from "@aws-cdk/aws-pipes-sources-alpha";
 import {
-  ApiDestinationTarget,
   SqsTarget,
+  ApiDestinationTarget,
 } from "@aws-cdk/aws-pipes-targets-alpha";
 import {
   SecretValue,
@@ -129,11 +129,19 @@ export class MyStack extends Stack {
 
     const pipeSource = new DynamoDBSource(weatherStatsTable, {
       startingPosition: DynamoDBStartingPosition.LATEST,
+      batchSize: 1,
+      maximumRetryAttempts: 0,
+      deadLetterTarget: deadLetterQueue,
     });
 
-    const pipe = new Pipe(this, "Pipe", {
+    new Pipe(this, "Pipe", {
       source: pipeSource,
       target: new SqsTarget(deadLetterQueue),
+    });
+
+    new Pipe(this, "Pipe2", {
+      source: pipeSource,
+      target: new ApiDestinationTarget(momentoCachePutApiDestination),
     });
 
     // EventBridge Role
