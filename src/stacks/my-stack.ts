@@ -129,7 +129,7 @@ export class MyStack extends Stack {
       retentionPeriod: Duration.days(14),
     });
 
-    const pipeSource = new DynamoDBSource(weatherStatsTable, {
+    const momentoCachePutPipeSource = new DynamoDBSource(weatherStatsTable, {
       startingPosition: DynamoDBStartingPosition.LATEST,
       batchSize: 1,
       maximumRetryAttempts: 0,
@@ -141,31 +141,29 @@ export class MyStack extends Stack {
     //   target: new SqsTarget(deadLetterQueue),
     // });
 
-    const pipeFilter = new Filter([
+    const momentoCachePutPipeFilter = new Filter([
       FilterPattern.fromObject({
         eventName: ["INSERT", "MODIFY"],
       }),
     ]);
 
-    const pipeTarget = new ApiDestinationTarget(momentoCachePutApiDestination, {
-      pathParameterValues: [cacheName],
-      queryStringParameters: {
-        key: "$.dynamodb.Keys.Location.S",
-        ttl_seconds: "$.dynamodb.NewImage.TTL.N",
+    const momentoCachePutPipeTarget = new ApiDestinationTarget(
+      momentoCachePutApiDestination,
+      {
+        pathParameterValues: [cacheName],
+        queryStringParameters: {
+          key: "$.dynamodb.Keys.Location.S",
+          ttl_seconds: "$.dynamodb.NewImage.TTL.N",
+        },
+        inputTransformation: InputTransformation.fromObject({
+          Location: "$.dynamodb.Keys.Location.S",
+          MaxTemp: "$.dynamodb.NewImage.MaxTemp.N",
+          MinTemp: "$.dynamodb.NewImage.MinTemp.N",
+          ChancesOfPrecipitation:
+            "$.dynamodb.NewImage.ChancesOfPrecipitation.N",
+        }),
       },
-      inputTransformation: InputTransformation.fromObject({
-        Location: "$.dynamodb.Keys.Location.S",
-        MaxTemp: "$.dynamodb.NewImage.MaxTemp.N",
-        MinTemp: "$.dynamodb.NewImage.MinTemp.N",
-        ChancesOfPrecipitation: "$.dynamodb.NewImage.ChancesOfPrecipitation.N",
-      }),
-    });
-
-    new Pipe(this, "Pipe2", {
-      source: pipeSource,
-      filter: pipeFilter,
-      target: pipeTarget,
-    });
+    );
 
     // EventBridge Role
     const eventBridgeRole = new Role(
@@ -176,6 +174,13 @@ export class MyStack extends Stack {
         assumedBy: new ServicePrincipal("pipes.amazonaws.com"),
       },
     );
+
+    new Pipe(this, "Pipe2", {
+      source: momentoCachePutPipeSource,
+      filter: momentoCachePutPipeFilter,
+      target: momentoCachePutPipeTarget,
+      // role: eventBridgeRole,
+    });
 
     eventBridgeRole.addToPolicy(
       new PolicyStatement({
