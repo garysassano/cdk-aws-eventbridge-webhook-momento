@@ -3,7 +3,10 @@ import {
   DynamoDBSource,
   DynamoDBStartingPosition,
 } from "@aws-cdk/aws-pipes-sources-alpha";
-import { ApiDestinationTarget } from "@aws-cdk/aws-pipes-targets-alpha";
+import {
+  ApiDestinationTarget,
+  SqsTarget,
+} from "@aws-cdk/aws-pipes-targets-alpha";
 import {
   SecretValue,
   RemovalPolicy,
@@ -130,7 +133,7 @@ export class MyStack extends Stack {
 
     const pipe = new Pipe(this, "Pipe", {
       source: pipeSource,
-      target: new SomeTarget(targetQueue),
+      target: new SqsTarget(deadLetterQueue),
     });
 
     // EventBridge Role
