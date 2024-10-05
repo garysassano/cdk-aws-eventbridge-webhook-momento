@@ -3,9 +3,9 @@ import {
   Filter,
   FilterPattern,
   InputTransformation,
-  // LogDestinationConfig,
+  LogDestinationConfig,
   LogLevel,
-  // LogDestinationParameters,
+  LogDestinationParameters,
 } from "@aws-cdk/aws-pipes-alpha";
 import {
   DynamoDBSource,
@@ -222,12 +222,19 @@ export class MyStack extends Stack {
       },
     );
 
+    const logDestinationParameters: LogDestinationParameters = {
+      cloudwatchLogsLogDestination: {
+        logGroupArn: logGroup.logGroupArn,
+      },
+    };
+
     new Pipe(this, "MomentoCachePutPipe", {
       // pipeName: "momento-cache-put-pipe",
       source: momentoCachePutPipeSource,
       filter: momentoCachePutPipeFilter,
       target: momentoCachePutPipeTarget,
       // role: eventBridgeRole,
+      logDestinations: [logDestinationParameters],
       logLevel: LogLevel.INFO,
     });
 
