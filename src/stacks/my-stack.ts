@@ -223,6 +223,7 @@ export class MyStack extends Stack {
     );
 
     new Pipe(this, "MomentoCachePutPipe", {
+      // pipeName: "momento-cache-put-pipe",
       source: momentoCachePutPipeSource,
       filter: momentoCachePutPipeFilter,
       target: momentoCachePutPipeTarget,
