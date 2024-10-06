@@ -10,6 +10,7 @@ import {
   StreamViewType,
   TableV2,
 } from "aws-cdk-lib/aws-dynamodb";
+import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 
 // import { CfnPipe } from "aws-cdk-lib/aws-pipes";
 
@@ -44,9 +45,19 @@ export class TestStack extends Stack {
       deadLetterTarget: dlq,
     });
 
+    const pipeRole = new Role(this, "EventbridgeRole", {
+      roleName: "eventbridge-role",
+      assumedBy: new ServicePrincipal("pipes.amazonaws.com"),
+    });
+
+    ddbTable.grantFullAccess(pipeRole);
+    queue.grantSendMessages(pipeRole);
+    dlq.grantSendMessages(pipeRole);
+
     new Pipe(this, "Pipe", {
       source: pipeSource,
       target: new SqsTarget(queue),
+      role: pipeRole,
     });
   }
 }
