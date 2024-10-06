@@ -88,42 +88,7 @@ export class MyStack extends Stack {
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
-    const logDestination = this.createLogDestination(logGroup);
-
-    //==============================================================================
-    // EVENTBRIDGE
-    //==============================================================================
-
-    // Connections
-    const momentoConnection = this.createMomentoConnection(momentoApiKeySecret);
-
-    // API Destinations
-    const apiDestinations = this.createApiDestinations(
-      momentoConnection,
-      momentoApiEndpoint,
-    );
-
-    // Pipes
-    this.createMomentoPipes(
-      weatherStatsTable,
-      weatherStatsTableDlq,
-      apiDestinations,
-      logDestination,
-    );
-  }
-
-  private getEnvVariable(name: string): string {
-    const value = process.env[name];
-    if (!value) {
-      throw new Error(
-        `Required environment variable '${name}' is missing or undefined`,
-      );
-    }
-    return value;
-  }
-
-  private createLogDestination(logGroup: LogGroup): ILogDestination {
-    return {
+    const logDestination: ILogDestination = {
       bind: () => ({
         parameters: {
           cloudwatchLogsLogDestination: {
@@ -135,56 +100,66 @@ export class MyStack extends Stack {
         logGroup.grantWrite(grantee);
       },
     };
-  }
 
-  private createMomentoConnection(apiKeySecret: Secret): Connection {
-    return new Connection(this, "MomentoConnection", {
+    //==============================================================================
+    // EVENTBRIDGE
+    //==============================================================================
+
+    //------------------------------------------------------------------------------
+    // Connection
+    //------------------------------------------------------------------------------
+    const momentoConnection = new Connection(this, "MomentoConnection", {
       connectionName: "momento-connection",
       authorization: Authorization.apiKey(
         "Momento API Key",
-        SecretValue.secretsManager(apiKeySecret.secretName),
+        SecretValue.secretsManager(momentoApiKeySecret.secretName),
       ),
     });
-  }
 
-  private createApiDestinations(connection: Connection, endpoint: string) {
-    return {
-      cachePut: new ApiDestination(this, "MomentoCachePutApiDestination", {
+    //------------------------------------------------------------------------------
+    // API Destinations
+    //------------------------------------------------------------------------------
+    const momentoCachePutApiDestination = new ApiDestination(
+      this,
+      "MomentoCachePutApiDestination",
+      {
         apiDestinationName: "momento-cache-put-api-destination",
-        connection,
-        endpoint: `${endpoint}/cache/*`,
+        connection: momentoConnection,
+        endpoint: `${momentoApiEndpoint}/cache/*`,
         httpMethod: HttpMethod.PUT,
-      }),
-      cacheDelete: new ApiDestination(
-        this,
-        "MomentoCacheDeleteApiDestination",
-        {
-          apiDestinationName: "momento-cache-delete-api-destination",
-          connection,
-          endpoint: `${endpoint}/cache/*`,
-          httpMethod: HttpMethod.DELETE,
-        },
-      ),
-      topicsPost: new ApiDestination(this, "MomentoTopicsPostApiDestination", {
-        apiDestinationName: "momento-topics-post-api-destination",
-        connection,
-        endpoint: `${endpoint}/topics/*/*`,
-        httpMethod: HttpMethod.POST,
-      }),
-    };
-  }
+      },
+    );
 
-  private createMomentoPipes(
-    table: TableV2,
-    dlq: Queue,
-    apiDestinations: ReturnType<typeof this.createApiDestinations>,
-    logDestination: ILogDestination,
-  ) {
-    const commonSourceConfig = {
+    const momentoCacheDeleteApiDestination = new ApiDestination(
+      this,
+      "MomentoCacheDeleteApiDestination",
+      {
+        apiDestinationName: "momento-cache-delete-api-destination",
+        connection: momentoConnection,
+        endpoint: `${momentoApiEndpoint}/cache/*`,
+        httpMethod: HttpMethod.DELETE,
+      },
+    );
+
+    const momentoTopicsPostApiDestination = new ApiDestination(
+      this,
+      "MomentoTopicsPostApiDestination",
+      {
+        apiDestinationName: "momento-topics-post-api-destination",
+        connection: momentoConnection,
+        endpoint: `${momentoApiEndpoint}/topics/*/*`,
+        httpMethod: HttpMethod.POST,
+      },
+    );
+
+    //------------------------------------------------------------------------------
+    // Pipes
+    //------------------------------------------------------------------------------
+    const commonPipeSourceConfig = {
       startingPosition: DynamoDBStartingPosition.LATEST,
       batchSize: 1,
       maximumRetryAttempts: 0,
-      deadLetterTarget: dlq,
+      deadLetterTarget: weatherStatsTableDlq,
     };
 
     const commonPipeConfig = {
@@ -193,14 +168,14 @@ export class MyStack extends Stack {
       logIncludeExecutionData: [IncludeExecutionData.ALL],
     };
 
-    // Cache Put Pipe
+    // Momento Cache Put Pipe
     new Pipe(this, "MomentoCachePutPipe", {
       pipeName: "momento-cache-put-pipe",
-      source: new DynamoDBSource(table, commonSourceConfig),
+      source: new DynamoDBSource(weatherStatsTable, commonPipeSourceConfig),
       filter: new Filter([
         FilterPattern.fromObject({ eventName: ["INSERT", "MODIFY"] }),
       ]),
-      target: new ApiDestinationTarget(apiDestinations.cachePut, {
+      target: new ApiDestinationTarget(momentoCachePutApiDestination, {
         pathParameterValues: [cacheName],
         queryStringParameters: {
           key: "$.dynamodb.Keys.Location.S",
@@ -217,12 +192,12 @@ export class MyStack extends Stack {
       ...commonPipeConfig,
     });
 
-    // Cache Delete Pipe
+    // Momento Cache Delete Pipe
     new Pipe(this, "MomentoCacheDeletePipe", {
       pipeName: "momento-cache-delete-pipe",
-      source: new DynamoDBSource(table, commonSourceConfig),
+      source: new DynamoDBSource(weatherStatsTable, commonPipeSourceConfig),
       filter: new Filter([FilterPattern.fromObject({ eventName: ["REMOVE"] })]),
-      target: new ApiDestinationTarget(apiDestinations.cacheDelete, {
+      target: new ApiDestinationTarget(momentoCacheDeleteApiDestination, {
         pathParameterValues: [cacheName],
         queryStringParameters: {
           key: "$.dynamodb.Keys.Location.S",
@@ -231,11 +206,11 @@ export class MyStack extends Stack {
       ...commonPipeConfig,
     });
 
-    // Topics Post Pipe
+    // Momento Topics Post Pipe
     new Pipe(this, "MomentoTopicsPostPipe", {
       pipeName: "momento-topics-post-pipe",
-      source: new DynamoDBSource(table, commonSourceConfig),
-      target: new ApiDestinationTarget(apiDestinations.topicsPost, {
+      source: new DynamoDBSource(weatherStatsTable, commonPipeSourceConfig),
+      target: new ApiDestinationTarget(momentoTopicsPostApiDestination, {
         pathParameterValues: [cacheName, topicName],
         inputTransformation: InputTransformation.fromObject({
           EventType: "$.eventName",
@@ -248,5 +223,15 @@ export class MyStack extends Stack {
       }),
       ...commonPipeConfig,
     });
+  }
+
+  private getEnvVariable(name: string): string {
+    const value = process.env[name];
+    if (!value) {
+      throw new Error(
+        `Required environment variable '${name}' is missing or undefined`,
+      );
+    }
+    return value;
   }
 }
