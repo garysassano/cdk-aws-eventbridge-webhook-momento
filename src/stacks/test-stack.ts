@@ -1,4 +1,4 @@
-import { Pipe } from "@aws-cdk/aws-pipes-alpha";
+import { ILogDestination, Pipe } from "@aws-cdk/aws-pipes-alpha";
 import {
   DynamoDBSource,
   DynamoDBStartingPosition,
@@ -10,7 +10,7 @@ import {
   StreamViewType,
   TableV2,
 } from "aws-cdk-lib/aws-dynamodb";
-import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
+import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 
 // import { CfnPipe } from "aws-cdk-lib/aws-pipes";
 
@@ -34,30 +34,34 @@ export class TestStack extends Stack {
       retentionPeriod: Duration.days(14),
     });
 
-    const dlq = new Queue(this, "DLQ", {
-      retentionPeriod: Duration.days(14),
-    });
-
     const pipeSource = new DynamoDBSource(ddbTable, {
       startingPosition: DynamoDBStartingPosition.LATEST,
       batchSize: 1,
       maximumRetryAttempts: 0,
-      deadLetterTarget: dlq,
     });
 
-    const pipeRole = new Role(this, "PipeRole", {
-      roleName: "pipe-role",
-      assumedBy: new ServicePrincipal("pipes.amazonaws.com"),
+    const logGroup = new LogGroup(this, "AccessLogs", {
+      retention: RetentionDays.THREE_MONTHS,
+      removalPolicy: RemovalPolicy.DESTROY,
     });
 
-    ddbTable.grantFullAccess(pipeRole);
-    queue.grantSendMessages(pipeRole);
-    dlq.grantSendMessages(pipeRole);
+    const cwLogDestination: ILogDestination = {
+      bind: () => ({
+        parameters: {
+          cloudwatchLogsLogDestination: {
+            logGroupArn: logGroup.logGroupArn,
+          },
+        },
+      }),
+      grantPush: (grantee) => {
+        logGroup.grantWrite(grantee);
+      },
+    };
 
     new Pipe(this, "Pipe", {
       source: pipeSource,
       target: new SqsTarget(queue),
-      role: pipeRole,
+      logDestinations: [cwLogDestination],
     });
   }
 }
