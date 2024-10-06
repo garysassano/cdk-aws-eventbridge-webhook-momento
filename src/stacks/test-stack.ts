@@ -45,8 +45,8 @@ export class TestStack extends Stack {
       deadLetterTarget: dlq,
     });
 
-    const pipeRole = new Role(this, "EventbridgeRole", {
-      roleName: "eventbridge-role",
+    const pipeRole = new Role(this, "PipeRole", {
+      roleName: "pipe-role",
       assumedBy: new ServicePrincipal("pipes.amazonaws.com"),
     });
 
