@@ -245,9 +245,49 @@ export class MyStack extends Stack {
     });
 
     //==============================================================================
-    // MOMENTO CACHE PUT PIPE
+    // MOMENTO CACHE DELETE PIPE
     //==============================================================================
 
+    const momentoCacheDeletePipeSource = new DynamoDBSource(weatherStatsTable, {
+      startingPosition: DynamoDBStartingPosition.LATEST,
+      batchSize: 1,
+      maximumRetryAttempts: 0,
+      deadLetterTarget: deadLetterQueue,
+    });
+
+    const momentoCacheDeletePipeFilter = new Filter([
+      FilterPattern.fromObject({
+        eventName: ["REMOVE"],
+      }),
+    ]);
+
+    const momentoCacheDeletePipeTarget = new ApiDestinationTarget(
+      momentoCacheDeleteApiDestination,
+      {
+        pathParameterValues: [cacheName],
+        queryStringParameters: {
+          key: "$.dynamodb.Keys.Location.S",
+        },
+      },
+    );
+
+    new Pipe(this, "MomentoCacheDeletePipe", {
+      pipeName: "momento-cache-delete-pipe",
+      source: momentoCacheDeletePipeSource,
+      filter: momentoCacheDeletePipeFilter,
+      target: momentoCacheDeletePipeTarget,
+      logDestinations: [logDestination],
+      logLevel: LogLevel.INFO,
+      logIncludeExecutionData: [IncludeExecutionData.ALL],
+      // role: eventBridgeRole,
+    });
+
+    // ... (rest of the code remains unchanged)
+  }
+}
+
+// Commented-out code moved to the bottom of the file
+/*
     // EventBridge Pipes
     //   const cachePutCfnPipe = new CfnPipe(
     //     this,
@@ -387,5 +427,4 @@ export class MyStack extends Stack {
     //   topicPublishCfnPipe.node.addDependency(momentoTopicsPostApiDestination);
     //   cacheDeleteCfnPipe.node.addDependency(weatherStatsTable);
     //   cacheDeleteCfnPipe.node.addDependency(momentoCacheDeleteApiDestination);
-  }
-}
+*/
