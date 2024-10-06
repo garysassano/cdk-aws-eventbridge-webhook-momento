@@ -47,7 +47,7 @@ import { Construct } from "constructs";
 const cacheName: string = "momento-eventbridge-cache";
 // const topicName: string = "momento-eventbridge-topic";
 
-export class MyStack extends Stack {
+export class TestStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
     super(scope, id, props);
 
