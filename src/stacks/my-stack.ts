@@ -79,7 +79,7 @@ export class MyStack extends Stack {
     });
 
     //==============================================================================
-    // CLOUDWATCH LOGS
+    // CLOUDWATCH
     //==============================================================================
 
     const logGroup = new LogGroup(this, "AccessLogs", {
@@ -106,7 +106,7 @@ export class MyStack extends Stack {
     //==============================================================================
 
     //------------------------------------------------------------------------------
-    // Connection
+    // Connections
     //------------------------------------------------------------------------------
     const momentoConnection = new Connection(this, "MomentoConnection", {
       connectionName: "momento-connection",
