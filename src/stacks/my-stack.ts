@@ -45,7 +45,7 @@ import { Queue } from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
 
 const cacheName: string = "momento-eventbridge-cache";
-// const topicName: string = "momento-eventbridge-topic";
+const topicName: string = "momento-eventbridge-topic";
 
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
@@ -282,7 +282,41 @@ export class MyStack extends Stack {
       // role: eventBridgeRole,
     });
 
-    // ... (rest of the code remains unchanged)
+    //==============================================================================
+    // MOMENTO TOPICS POST PIPE
+    //==============================================================================
+
+    const momentoTopicsPostPipeSource = new DynamoDBSource(weatherStatsTable, {
+      startingPosition: DynamoDBStartingPosition.LATEST,
+      batchSize: 1,
+      maximumRetryAttempts: 0,
+      deadLetterTarget: deadLetterQueue,
+    });
+
+    const momentoTopicsPostPipeTarget = new ApiDestinationTarget(
+      momentoTopicsPostApiDestination,
+      {
+        pathParameterValues: [cacheName, topicName],
+        inputTransformation: InputTransformation.fromObject({
+          EventType: "$.eventName",
+          Location: "$.dynamodb.Keys.Location.S",
+          MaxTemp: "$.dynamodb.NewImage.MaxTemp.N",
+          MinTemp: "$.dynamodb.NewImage.MinTemp.N",
+          ChancesOfPrecipitation:
+            "$.dynamodb.NewImage.ChancesOfPrecipitation.N",
+        }),
+      },
+    );
+
+    new Pipe(this, "MomentoTopicsPostPipe", {
+      pipeName: "momento-topics-post-pipe",
+      source: momentoTopicsPostPipeSource,
+      target: momentoTopicsPostPipeTarget,
+      logDestinations: [logDestination],
+      logLevel: LogLevel.INFO,
+      logIncludeExecutionData: [IncludeExecutionData.ALL],
+      // role: eventBridgeRole,
+    });
   }
 }
 
