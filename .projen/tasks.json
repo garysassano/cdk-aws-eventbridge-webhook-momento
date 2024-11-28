@@ -117,6 +117,9 @@
     "eslint": {
       "name": "eslint",
       "description": "Runs eslint against the codebase",
+      "env": {
+        "ESLINT_USE_FLAT_CONFIG": "false"
+      },
       "steps": [
         {
           "exec": "eslint --ext .ts,.tsx --fix --no-error-on-unmatched-pattern $@ src test build-tools projenrc .projenrc.ts",
@@ -211,7 +214,7 @@
       },
       "steps": [
         {
-          "exec": "pnpm dlx npm-check-updates@16 --upgrade --target=minor --peer --dep=dev,peer,prod,optional --filter=@types/jest,esbuild,eslint-config-prettier,eslint-import-resolver-typescript,eslint-plugin-import,eslint-plugin-prettier,jest,prettier,projen,ts-jest,ts-node,typescript,@aws-cdk/aws-pipes-alpha,@aws-cdk/aws-pipes-enrichments-alpha,@aws-cdk/aws-pipes-sources-alpha,@aws-cdk/aws-pipes-targets-alpha"
+          "exec": "pnpm dlx npm-check-updates@16 --upgrade --target=minor --peer --no-deprecated --dep=dev,peer,prod,optional --filter=@types/jest,esbuild,eslint-config-prettier,eslint-import-resolver-typescript,eslint-plugin-import,eslint-plugin-prettier,jest,prettier,projen,ts-jest,ts-node,typescript,@aws-cdk/aws-pipes-alpha,@aws-cdk/aws-pipes-enrichments-alpha,@aws-cdk/aws-pipes-sources-alpha,@aws-cdk/aws-pipes-targets-alpha"
         },
         {
           "exec": "pnpm i --no-frozen-lockfile"
