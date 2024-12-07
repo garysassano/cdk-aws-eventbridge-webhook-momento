@@ -1,7 +1,7 @@
 import { awscdk, javascript } from "projen";
 
 const project = new awscdk.AwsCdkTypeScriptApp({
-  cdkVersion: "2.171.1",
+  cdkVersion: "2.172.0",
   defaultReleaseBranch: "main",
   depsUpgradeOptions: { workflow: false },
   eslint: true,

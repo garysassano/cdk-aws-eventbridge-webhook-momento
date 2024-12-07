@@ -28,7 +28,7 @@
     "@types/node": "^22",
     "@typescript-eslint/eslint-plugin": "^8",
     "@typescript-eslint/parser": "^8",
-    "aws-cdk": "^2.171.1",
+    "aws-cdk": "^2.172.0",
     "esbuild": "^0.24.0",
     "eslint": "^9",
     "eslint-config-prettier": "^9.1.0",
@@ -48,7 +48,7 @@
     "@aws-cdk/aws-pipes-enrichments-alpha": "2.171.1-alpha.0",
     "@aws-cdk/aws-pipes-sources-alpha": "2.171.1-alpha.0",
     "@aws-cdk/aws-pipes-targets-alpha": "2.171.1-alpha.0",
-    "aws-cdk-lib": "^2.171.1",
+    "aws-cdk-lib": "^2.172.0",
     "constructs": "^10.0.5"
   },
   "pnpm": {},
