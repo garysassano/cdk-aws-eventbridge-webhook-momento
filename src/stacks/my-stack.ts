@@ -64,6 +64,7 @@ export class MyStack extends Stack {
         name: "Location",
         type: AttributeType.STRING,
       },
+      timeToLiveAttribute: "TTL",
       dynamoStream: StreamViewType.NEW_AND_OLD_IMAGES,
       removalPolicy: RemovalPolicy.DESTROY,
     });
@@ -98,7 +99,7 @@ export class MyStack extends Stack {
     const momentoConnection = new Connection(this, "MomentoConnection", {
       connectionName: "momento-connection",
       authorization: Authorization.apiKey(
-        "Momento API Key",
+        "Authorization",
         SecretValue.secretsManager(momentoApiKeySecret.secretName),
       ),
     });
