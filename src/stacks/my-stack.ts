@@ -1,11 +1,11 @@
 import {
-  Pipe,
+  CloudwatchLogsLogDestination,
   Filter,
   FilterPattern,
+  IncludeExecutionData,
   InputTransformation,
   LogLevel,
-  ILogDestination,
-  IncludeExecutionData,
+  Pipe,
 } from "@aws-cdk/aws-pipes-alpha";
 import {
   DynamoDBSource,
@@ -13,11 +13,11 @@ import {
 } from "@aws-cdk/aws-pipes-sources-alpha";
 import { ApiDestinationTarget } from "@aws-cdk/aws-pipes-targets-alpha";
 import {
-  SecretValue,
+  Duration,
   RemovalPolicy,
+  SecretValue,
   Stack,
   StackProps,
-  Duration,
 } from "aws-cdk-lib";
 import {
   AttributeType,
@@ -25,9 +25,9 @@ import {
   TableV2,
 } from "aws-cdk-lib/aws-dynamodb";
 import {
-  Connection,
-  Authorization,
   ApiDestination,
+  Authorization,
+  Connection,
   HttpMethod,
 } from "aws-cdk-lib/aws-events";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -87,19 +87,7 @@ export class MyStack extends Stack {
       logGroupName: `weather-stats-demo-logs-${this.region}`,
       removalPolicy: RemovalPolicy.DESTROY,
     });
-
-    const logDestination: ILogDestination = {
-      bind: () => ({
-        parameters: {
-          cloudwatchLogsLogDestination: {
-            logGroupArn: logGroup.logGroupArn,
-          },
-        },
-      }),
-      grantPush: (grantee) => {
-        logGroup.grantWrite(grantee);
-      },
-    };
+    const logDestination = new CloudwatchLogsLogDestination(logGroup);
 
     //==============================================================================
     // EVENTBRIDGE
