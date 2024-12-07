@@ -14,9 +14,10 @@ const project = new awscdk.AwsCdkTypeScriptApp({
 
   deps: [
     "@aws-cdk/aws-pipes-alpha",
+    "@aws-cdk/aws-pipes-enrichments-alpha",
     "@aws-cdk/aws-pipes-sources-alpha",
     "@aws-cdk/aws-pipes-targets-alpha",
-    "@aws-cdk/aws-pipes-enrichments-alpha",
+    "zod",
   ],
 });
 

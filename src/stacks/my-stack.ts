@@ -34,6 +34,7 @@ import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
+import { validateEnv } from "../utils/validate-env";
 
 const cacheName: string = "momento-eventbridge-cache";
 const topicName: string = "momento-eventbridge-topic";
@@ -42,9 +43,7 @@ export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
     super(scope, id, props);
 
-    // Read environment variables
-    const momentoApiKey = this.getEnvVariable("MOMENTO_API_KEY");
-    const momentoApiEndpoint = this.getEnvVariable("MOMENTO_API_ENDPOINT");
+    const env = validateEnv(["MOMENTO_API_KEY", "MOMENTO_API_ENDPOINT"]);
 
     //==============================================================================
     // SECRETS MANAGER
@@ -52,7 +51,7 @@ export class MyStack extends Stack {
 
     const momentoApiKeySecret = new Secret(this, "MomentoApiKeySecret", {
       secretName: "momento-api-key-secret",
-      secretStringValue: SecretValue.unsafePlainText(momentoApiKey),
+      secretStringValue: SecretValue.unsafePlainText(env.MOMENTO_API_KEY),
     });
 
     //==============================================================================
@@ -113,7 +112,7 @@ export class MyStack extends Stack {
       {
         apiDestinationName: "momento-cache-put-api-destination",
         connection: momentoConnection,
-        endpoint: `${momentoApiEndpoint}/cache/*`,
+        endpoint: `${env.MOMENTO_API_ENDPOINT}/cache/*`,
         httpMethod: HttpMethod.PUT,
       },
     );
@@ -124,7 +123,7 @@ export class MyStack extends Stack {
       {
         apiDestinationName: "momento-cache-delete-api-destination",
         connection: momentoConnection,
-        endpoint: `${momentoApiEndpoint}/cache/*`,
+        endpoint: `${env.MOMENTO_API_ENDPOINT}/cache/*`,
         httpMethod: HttpMethod.DELETE,
       },
     );
@@ -135,7 +134,7 @@ export class MyStack extends Stack {
       {
         apiDestinationName: "momento-topics-post-api-destination",
         connection: momentoConnection,
-        endpoint: `${momentoApiEndpoint}/topics/*/*`,
+        endpoint: `${env.MOMENTO_API_ENDPOINT}/topics/*/*`,
         httpMethod: HttpMethod.POST,
       },
     );
@@ -211,15 +210,5 @@ export class MyStack extends Stack {
       }),
       ...commonPipeConfig,
     });
-  }
-
-  private getEnvVariable(name: string): string {
-    const value = process.env[name];
-    if (!value) {
-      throw new Error(
-        `Required environment variable '${name}' is missing or undefined`,
-      );
-    }
-    return value;
   }
 }
